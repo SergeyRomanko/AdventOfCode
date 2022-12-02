@@ -11,6 +11,7 @@
         <AssemblyName>Adventofcode2022</AssemblyName>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
+        <LangVersion>9</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -38,13 +39,18 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Common\Inputs.cs" />
         <Compile Include="Common\Puzzle.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Puzzles\Puzzle01\Puzzle01.cs" />
+        <Compile Include="Puzzles\Puzzle02\Puzzle02.cs" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="Puzzles\Puzzle01\Puzzle01.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Puzzles\Puzzle02\Puzzle02.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>

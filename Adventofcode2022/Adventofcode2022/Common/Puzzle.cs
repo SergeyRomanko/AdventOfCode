@@ -6,6 +6,6 @@ namespace Adventofcode2022.Common
     {
         public string Name => GetType().Name;
 
-        public abstract string[] GetResults(IEnumerable<string> enumerable);
+        public abstract string[] GetResults(IReadOnlyList<string> input);
     }
 }

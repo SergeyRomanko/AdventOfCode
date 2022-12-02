@@ -7,7 +7,7 @@ namespace Adventofcode2022.Puzzles
 {
     public class Puzzle01 : Puzzle
     {
-        public override string[] GetResults(IEnumerable<string> input)
+        public override string[] GetResults(IReadOnlyList<string> input)
         {
             var inputList = input.ToList();
             
