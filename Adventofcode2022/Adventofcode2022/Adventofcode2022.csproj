@@ -45,12 +45,16 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Puzzles\Puzzle01\Puzzle01.cs" />
         <Compile Include="Puzzles\Puzzle02\Puzzle02.cs" />
+        <Compile Include="Puzzles\Puzzle03\Puzzle03.cs" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="Puzzles\Puzzle01\Puzzle01.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
       <Content Include="Puzzles\Puzzle02\Puzzle02.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Puzzles\Puzzle03\Puzzle03.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
