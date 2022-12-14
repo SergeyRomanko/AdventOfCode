@@ -47,6 +47,9 @@
       <None Update="Puzzles\Puzzle13\Puzzle13.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="Puzzles\Puzzle14\Puzzle14.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

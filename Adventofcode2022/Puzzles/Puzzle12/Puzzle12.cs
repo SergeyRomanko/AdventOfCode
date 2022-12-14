@@ -159,8 +159,6 @@ namespace Adventofcode2022.Puzzles
                     .Where(x => !submap[x.X, x.Y].IsVisited)
                     .Aggregate((a, b) => submap[a.X, a.Y].Length < submap[b.X, b.Y].Length ? a : b);
                 
-                //Console.WriteLine($">>> Pos {cur.X}:{cur.Y} {submap[cur.X, cur.Y].Height}");
-                
                 var neib = new Vec2[]
                 {
                     new Vec2(cur.X+1, cur.Y),
