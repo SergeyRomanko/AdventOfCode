@@ -21,22 +21,44 @@ namespace Adventofcode2022.Puzzles
                 .Where(x => !string.IsNullOrEmpty(x))
                 .ToList();
 
-             var data = Enumerable
+             var data1 = Enumerable
                 .Range(0, lines.Count / 2)
                 .Where(x => TestPair(lines[x * 2], lines[x * 2 + 1]) == Result.True)
                 .Select(x => x + 1)
                 .Sum();
 
-            /*var x = 2;
-            var r = TestPair(lines[x * 2], lines[x * 2 + 1]);
-            Console.WriteLine($">>> x:{x} r:{r}");
-            
-            var data = 0;*/
-            
+             var special1 = GetNode(GetItems("[[2]]").ToArray());
+             var special2 = GetNode(GetItems("[[6]]").ToArray());
+
+             special1.IsSpecial = true;
+             special2.IsSpecial = true;
+
+             var ordered = lines
+                 .Select(x => GetNode(GetItems(x).ToArray()))
+                 .Concat(new[] { special1, special2 })
+                 .ToList();
+             
+             ordered.Sort(CompareNodes);
+             
+             var data2 = ordered
+                 .Select((x,i) => x.IsSpecial ? i + 1 : -1)
+                 .Where(x => x > 0)
+                 .Aggregate((a,b) => a * b);
+             
             return new[]
             {
-                data.ToString(),
-                ""
+                data1.ToString(),
+                data2.ToString()
+            };
+        }
+
+        private int CompareNodes(Node x, Node y)
+        {
+            return Compare(x, y) switch
+            {
+                Result.True  => -1,
+                Result.Equal =>  0,
+                Result.False => +1
             };
         }
 
@@ -209,6 +231,6 @@ namespace Adventofcode2022.Puzzles
     
     public class Node
     {
-
+        public bool IsSpecial;
     }
 }
