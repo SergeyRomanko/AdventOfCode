@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -11,7 +12,8 @@ namespace Adventofcode2022.Puzzles
         private class Node
         {
             public string Name;
-            public int Val;
+            public int Hash;
+            public int Preassure;
             public List<Node> Tunnels;
         }
 
@@ -31,7 +33,8 @@ namespace Adventofcode2022.Puzzles
                 .Select(x => new Node
                 {
                     Name = x[0],
-                    Val = int.Parse(x[1])
+                    Preassure = int.Parse(x[1]),
+                    Hash = x[0].GetHashCode()
                 })
                 .ToList();
 
@@ -44,113 +47,126 @@ namespace Adventofcode2022.Puzzles
                     .ToList();
             }
 
+            var start = allNodes.First(x => x.Name == "AA");
+            
             return new[]
             {
-                DoThings(allNodes, allNodes.First(x => x.Name == "AA")).ToString(),
+                DoPart1(start, 30, allNodes).ToString(),
                 ""
             };
         }
 
-        private int DoThings(List<Node> all, Node cur)
+        private int DoPart1(Node start, int steps, List<Node> all)
         {
             var result = 0;
-            var preasure = 0;
-            var open = new List<Node>();
 
-            for (var i = 0; i < 2; i++)
+            var targets = all.Where(x => x.Preassure > 0).ToList();
+            
+            targets.Add(start);
+            
+            var distances = new DistanceCache();
+            for (int i = 0; i < targets.Count; i++)
             {
-                Console.WriteLine($"==== Minute {i} ====");
-                Console.WriteLine($"Open valves {string.Join(", ", open.Select(x => x.Name))} Preasure: {preasure}");
-                
-                result += preasure;
-                var nxt = GetNext(all, cur);
-
-                var openValve = nxt == cur;
-                if (openValve)
+                for (int j = 0; j < targets.Count; j++)
                 {
-                    preasure += cur.Val;
-                    cur.Val = 0;
-                    open.Add(cur);
+                    var from = targets[i];
+                    var to = targets[j];
                     
-                    Console.WriteLine($"You open valve {cur.Name}");
+                    distances.AddDistance(from, to, Distance(from, to, all));
                 }
-                else
-                {
-                    Console.WriteLine($"You move to valve  {nxt.Name}");
-                }
-
-                cur = nxt;
-            }
-
-            return result;
-        }
-
-        private Node GetNext(List<Node> all, Node cur)
-        {
-            var candidates = cur.Tunnels
-                .ToDictionary(x => x, x => EvaluateMove(x, all));
-
-            if (cur.Val > 0)
-            {
-                candidates.Add(cur, EvaluateOpen(cur, all));
             }
             
-            return candidates
-                .OrderBy(x => x.Value)
-                .First()
-                .Key;
-        }
+            targets.Remove(start);
 
-        private int EvaluateMove(Node from, List<Node> all)
-        {
-            var tmp = all
-                .Where(x => x.Val > 0)
-                .Select(x => (x.Name, Distance(from, x, all), 1, x.Val, 0))
-                .ToList();
-                 
-            for (var i = 0; i < tmp.Count; i++)
+            var util = new PermuteUtil
             {
-                var value = tmp[i];
-                value.Item5 = (value.Item2 + value.Item3) * value.Item4;
-                tmp[i] = value;
-            }
-             
-            var result = tmp.Sum(x => (x.Item2 + x.Item3) * x.Item4);
-             
-            Console.WriteLine($" + EvaluateMove {from.Name} {result}");
-             
-            foreach (var v in tmp)
+                Distances = distances,
+                Steps = steps,
+                PrevNode = start,
+            };
+            
+            /*
+            var permute = Permute(targets, util);
+            foreach (var val in permute)
             {
-                Console.WriteLine($"    - {v.Item1} {v.Item2, 2} {v.Item3, 2} {v.Item4, 2} {v.Item5, 3}");
+                Console.WriteLine($"   {string.Join(" ", val.Nodes.Select(x => x.Name))} => {val.Result}");
             }
+            */
+            
+            var val = Permute(targets, util)
+                .Aggregate((a, b) => a.Result > b.Result ? a : b)
+                ;
+
+            result = val.Result;
+            
+            Console.WriteLine($"   {string.Join(" ", val.Nodes.Select(x => x.Name))} => {val.Result}");
 
             return result;
         }
-        
-        private int EvaluateOpen(Node from, List<Node> all)
-        {
-             var tmp = all
-                .Where(x => x.Val > 0)
-                .Select(x => (x.Name, Distance(from, x, all), (from == x ? 1 : 2), x.Val * (from == x ? -1 : +1), 0))
-                .ToList();
-                 
-             for (var i = 0; i < tmp.Count; i++)
-             {
-                 var value = tmp[i];
-                 value.Item5 = (value.Item2 + value.Item3) * value.Item4;
-                 tmp[i] = value;
-             }
-             
-             var result = tmp.Sum(x => (x.Item2 + x.Item3) * x.Item4);
-             
-             Console.WriteLine($" + EvaluateOpen {from.Name} {result}");
-             
-             foreach (var v in tmp)
-             {
-                 Console.WriteLine($"    - {v.Item1} {v.Item2, 2} {v.Item3, 2} {v.Item4, 2} {v.Item5, 3}");
-             }
 
-             return result;
+        private static IEnumerable<PermuteResult> Permute(IEnumerable<Node> sequence, PermuteUtil util)
+        {
+            if (sequence == null)
+            {
+                yield break;
+            }
+        
+            var list = sequence.ToList();
+        
+            if (!list.Any())
+            {
+                util.Result += util.Preasure * util.Steps;
+                
+                yield return new PermuteResult
+                {
+                    Result = util.Result,
+                    Nodes = Enumerable.Empty<Node>()
+                };
+            }
+            else
+            {
+                foreach (Node currentNode in list)
+                {
+                    var nextNodeUtil = new PermuteUtil
+                    {
+                        Distances = util.Distances,
+                        Preasure = util.Preasure,
+                        Result = util.Result,
+                        Steps = util.Steps,
+                        PrevNode = currentNode
+                    };
+                    
+                    //======================================
+                    var distance = 1 + util.Distances.GetDistance(util.PrevNode, currentNode);
+
+                    nextNodeUtil.Result += nextNodeUtil.Preasure * Math.Min(distance, util.Steps);
+
+                    if (distance > nextNodeUtil.Steps)
+                    {
+                        yield return new PermuteResult
+                        {
+                            Result = nextNodeUtil.Result,
+                            Nodes = Enumerable.Empty<Node>()
+                        };
+
+                        continue;
+                    }
+
+                    nextNodeUtil.Steps -= distance;
+                    nextNodeUtil.Preasure += currentNode.Preassure;
+                    
+                    //======================================
+                    
+                    var remainingItems = list.Where(x => x != currentNode);
+        
+                    foreach (var result in Permute(remainingItems, nextNodeUtil))
+                    {
+                        result.Nodes = result.Nodes.Prepend(currentNode);
+                        
+                        yield return result;
+                    }
+                }
+            }
         }
 
         private int Distance(Node from, Node to, List<Node> all)
@@ -182,37 +198,75 @@ namespace Adventofcode2022.Puzzles
 
             return -1;
         }
-        
-        public static IEnumerable<IEnumerable<T>> Permute<T>(this IEnumerable<T> sequence)
+
+        private struct PermuteUtil
         {
-            if (sequence == null)
+            public DistanceCache Distances;
+            public Node PrevNode;
+            public int Preasure;
+            public int Result;
+            public int Steps;
+        }
+        
+        private class PermuteResult
+        {
+            public int Result;
+            public IEnumerable<Node> Nodes;
+        }
+
+        private class DistanceCache
+        {
+            private readonly Dictionary<int, int> _cache = new();
+
+            public void AddDistance(Node a, Node b, int distance)
             {
-                yield break;
+                _cache[GetPairHash(a, b)] = distance;
+                _cache[GetPairHash(b, a)] = distance;
             }
-        
-            var list = sequence.ToList();
-        
-            if (!list.Any())
+            
+            public int GetDistance(Node a, Node b)
             {
-                yield return Enumerable.Empty<T>();
+                return _cache[GetPairHash(a, b)];
             }
-            else
+
+            private int GetPairHash(Node a, Node b)
             {
-                var startingElementIndex = 0;
-        
-                foreach (var startingElement in list)
-                {
-                    var index = startingElementIndex;
-                    var remainingItems = list.Where((e, i) => i != index);
-        
-                    foreach (var permutationOfRemainder in remainingItems.Permute())
-                    {
-                        yield return permutationOfRemainder.Prepend(startingElement);
-                    }
-        
-                    startingElementIndex++;
-                }
+                return HashCode.Combine(a.Hash, b.Hash);
             }
         }
     }
 }
+
+/*
+private static IEnumerable<IEnumerable<T>> Permute<T>(IEnumerable<T> sequence)
+{
+    if (sequence == null)
+    {
+        yield break;
+    }
+        
+    var list = sequence.ToList();
+        
+    if (!list.Any())
+    {
+        yield return Enumerable.Empty<T>();
+    }
+    else
+    {
+        var startingElementIndex = 0;
+        
+        foreach (var startingElement in list)
+        {
+            var index = startingElementIndex;
+            var remainingItems = list.Where((e, i) => i != index);
+        
+            foreach (var permutationOfRemainder in Permute(remainingItems))
+            {
+                yield return permutationOfRemainder.Prepend(startingElement);
+            }
+        
+            startingElementIndex++;
+        }
+    }
+}
+*/
