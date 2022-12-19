@@ -20,42 +20,86 @@ namespace Adventofcode2022.Puzzles
             };
         }
 
-        private ulong DoPart2(Jets jets0, Rocks rocks0)
+        private ulong DoPart2(Jets jets, Rocks rocks)
         {
-            var data0 = new char[7, 10000*4];
+            //PrintMagicNumbers(jets.Clone(), rocks.Clone());
             
-            for (var x = 0; x < data0.GetLength(0); x++)
+            var data = new char[7, 10000*4];
+            
+            for (var x = 0; x < data.GetLength(0); x++)
             {
-                for (var y = 0; y < data0.GetLength(1); y++)
+                for (var y = 0; y < data.GetLength(1); y++)
                 {
-                    data0[x, y] = '.';
+                    data[x, y] = '.';
                 }
             }
-            
-            
 
+            //Magic numbers
             var initSteps = 3471;
-            var top0 = SimRocks(data0, initSteps, -1, jets0, rocks0, true);
-
-            Print(data0);
-            
-            /*
-            !!!! 15617 J:4 R:1 25013 dSize:2781 dSteps:1735
-            !!!! 17352 J:4 R:1 27794 dSize:2781 dSteps:1735
-            !!!! 19087 J:4 R:1 30575 dSize:2781 dSteps:1735
-            */
-
             var patternSize = 1735;
             var patternHeight = 2781;
             
+            var top0 = SimRocks(data, initSteps, -1, jets, rocks);
+
             var stepsLeft = 1000000000000 - (ulong)initSteps;
             var patternCount = stepsLeft / (ulong)patternSize;
             var stepsRequired = stepsLeft % (ulong)patternSize;
             
-            var top1 = SimRocks(data0, (int)stepsRequired, top0, jets0, rocks0);
+            var top1 = SimRocks(data, (int)stepsRequired, top0, jets, rocks);
 
             
             return 1 + (ulong)top1 + patternCount * (ulong)patternHeight;
+        }
+
+        /*
+        Если добавлять камни достаточно долго, то кучи камней начинают образовывать повторяющиеся формы.
+        Этот метод выводит характеристики повторяющихся фрагментов
+        !!!! 15617 J:4 R:1 25013 dSize:2781 dSteps:1735
+        !!!! 17352 J:4 R:1 27794 dSize:2781 dSteps:1735
+        !!!! 19087 J:4 R:1 30575 dSize:2781 dSteps:1735
+        */
+        private void PrintMagicNumbers(Jets jets, Rocks rocks)
+        {
+            var data = new char[7, 100000*4];
+            
+            for (var x = 0; x < data.GetLength(0); x++)
+            {
+                for (var y = 0; y < data.GetLength(1); y++)
+                {
+                    data[x, y] = '.';
+                }
+            }
+
+            var top = 0;
+            var lastTop = 0;
+            var lastI = 0;
+            for (var i = 0; i < 10000; i++)
+            {
+                if (jets.Index <= 4)
+                {
+                    Console.WriteLine($"!!!! {i} J:{jets.Index} R:{rocks.Index} {top} dSize:{top - lastTop} dSteps:{i - lastI}");
+                    lastTop = top;
+                    lastI = i;
+                } 
+
+                var localTop = AddNewRock(data, rocks, top);
+
+                while (true)
+                {
+                    TryApplyJet(data, jets, localTop);
+                    
+                    if (!TryApplyGravity(data, localTop))
+                    {
+                        StopRock(data, localTop);
+                        
+                        break;
+                    }
+                    
+                    localTop -= 1;
+                }
+
+                top = Math.Max(top, localTop);
+            }
         }
 
         private int DoPart1(Jets jets, Rocks rocks)
@@ -73,22 +117,10 @@ namespace Adventofcode2022.Puzzles
             return SimRocks(data, 2022, -1, jets, rocks) + 1;
         }
 
-        private int SimRocks(char[,] data, int steps, int top, Jets jets, Rocks rocks, bool flag = false)
+        private int SimRocks(char[,] data, int steps, int top, Jets jets, Rocks rocks)
         {
-            var lastTop = 0;
-            var lastI = 0;
             for (var i = 0; i < steps; i++)
             {
-                if (flag)
-                {
-                    if (jets.Index <= 4)
-                    {
-                        Console.WriteLine($"!!!! {i} J:{jets.Index} R:{rocks.Index} {top} dSize:{top - lastTop} dSteps:{i - lastI}");
-                        lastTop = top;
-                        lastI = i;
-                    }    
-                }
-
                 var localTop = AddNewRock(data, rocks, top);
 
                 while (true)
@@ -109,25 +141,6 @@ namespace Adventofcode2022.Puzzles
             }
 
             return top;
-        }
-
-        private void Print(char[,] data)
-        {
-            var lst = new List<string>();
-            
-            for (var y = 500; y >= 0; y--)
-            {
-                var tmp = new List<char>();
-                
-                for (var x = 0; x < 7; x++)
-                {
-                    tmp.Add(data[x, y]);
-                }
-                
-                lst.Add(string.Join("", tmp));
-            }
-            
-            File.WriteAllLines("DFGFDG.txt", lst);
         }
 
         private void StopRock(char[,] data, int top)
