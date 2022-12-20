@@ -11,7 +11,7 @@ namespace Adventofcode2022.Puzzles
         {
             public Node Prv;
             public Node Nxt;
-            public int Value;
+            public long Value;
         }
         
         public override string[] GetResults(IReadOnlyList<string> input)
@@ -23,11 +23,47 @@ namespace Adventofcode2022.Puzzles
             return new[]
             {
                 DoTask1(data).ToString(),
-                ""
+                DoTask2(data).ToString()
             };
         }
 
-        private int DoTask1(List<int> data)
+        private long DoTask2(List<int> data)
+        {
+            var nodes = data
+                .Select(x => new Node { Value = x * 811589153L })
+                .ToList();
+            
+            for (var i = 0; i < nodes.Count; i++)
+            {
+                nodes[i].Nxt = i == nodes.Count - 1 ? nodes[0] : nodes[i + 1];
+                nodes[i].Prv = i == 0 ? nodes[^1] : nodes[i - 1];
+            }
+            
+            for (var times = 0; times < 10; times++)
+            {
+                for (var i = 0; i < data.Count; i++)
+                {
+                    Mix(nodes[i], data.Count);
+                }
+            }
+
+            var results = new List<long>();
+            
+            var node = GetNodeByValue(nodes[0], 0L);
+            for (int i = 1; i <= 3000; i++)
+            {
+                node = node.Nxt;
+
+                if (i % 1000 == 0)
+                {
+                    results.Add(node.Value);
+                }
+            }
+            
+            return results.Sum();
+        }
+
+        private long DoTask1(List<int> data)
         {
             var nodes = data
                 .Select(x => new Node { Value = x })
@@ -43,12 +79,12 @@ namespace Adventofcode2022.Puzzles
             
             for (var i = 0; i < data.Count; i++)
             {
-                Mix(nodes[i], data[i], data.Count);
+                Mix(nodes[i], data.Count);
                 
                 //Print(nodes[0]);
             }
             
-            var results = new List<int>();
+            var results = new List<long>();
             
             var node = GetNodeByValue(nodes[0], 0);
             for (int i = 1; i <= 3000; i++)
@@ -64,14 +100,16 @@ namespace Adventofcode2022.Puzzles
             return results.Sum();
         }
 
-        private void Mix(Node target, int value, int count)
+        private void Mix(Node target, long count)
         {
-            var offset = Math.Abs(value) % (count - 1);
+            var offset = Math.Abs(target.Value) % (count - 1L);
             
             if (offset == 0)
             {
                 return;
             }
+
+            var moveLeft = target.Value < 0L;
 
             var prv1 = target.Prv;
             var nxt1 = target.Nxt;
@@ -79,11 +117,11 @@ namespace Adventofcode2022.Puzzles
             var cur = target;
             for (var i = 0; i < offset; i++)
             {
-                cur = value < 0 ? cur.Prv : cur.Nxt;
+                cur = moveLeft ? cur.Prv : cur.Nxt;
             }
             
-            var prv2 = value < 0 ? cur.Prv : cur;
-            var nxt2 = value < 0 ? cur : cur.Nxt;
+            var prv2 = moveLeft ? cur.Prv : cur;
+            var nxt2 = moveLeft ? cur : cur.Nxt;
 
             if (prv2 == target || nxt2 == target)
             {
@@ -100,18 +138,13 @@ namespace Adventofcode2022.Puzzles
             target.Nxt = nxt2;
         }
 
-        private Node GetNodeByValue(Node start, int value)
+        private Node GetNodeByValue(Node start, long value)
         {
             var result = start;
             
             while (result.Value != value)
             {
                 result = result.Nxt;
-
-                if (result == start)
-                {
-                    throw new Exception($"Value not found {value}");
-                }
             }
 
             return result;
@@ -120,7 +153,7 @@ namespace Adventofcode2022.Puzzles
         private void Print(Node start)
         {
             var cur = start;
-            var lst = new List<int>();
+            var lst = new List<long>();
             
             while (true)
             {
