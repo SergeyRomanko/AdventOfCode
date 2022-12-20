@@ -19,7 +19,18 @@ namespace Adventofcode2022.Common
         {
             var file = Files.FirstOrDefault(x => x.Name.EndsWith($"{fileName}.txt"));
 
-            return File.ReadLines(file.FullName);
+            var result = Enumerable.Empty<string>();
+
+            try
+            {
+                result = File.ReadLines(file.FullName);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"File read error {fileName}");
+            }
+
+            return result;
         }
     }
 }
