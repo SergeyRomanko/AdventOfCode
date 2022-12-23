@@ -62,12 +62,17 @@ namespace Adventofcode2022.Puzzles
             
             return new[]
             {
-                blueprints.Select(x => DoTask1(x) * x.Id).Sum().ToString(),
-                ""
+                blueprints.Select(x => DoTask(x, 24) * x.Id).Sum().ToString(),
+                
+                blueprints
+                    .Take(3)
+                    .Select(x => DoTask(x, 32))
+                    .Aggregate(1, (x,y) => x * y)
+                    .ToString()
             };
         }
 
-        private int DoTask1(Blueprint blueprint)
+        private int DoTask(Blueprint blueprint, int minutesMax)
         {
             var minute1 = new State
             {
@@ -94,7 +99,7 @@ namespace Adventofcode2022.Puzzles
                 }
                 maxGeodes[candidate.Bot[Mineral.Geode]] = Math.Min(candidate.Minute, maxGeodes[candidate.Bot[Mineral.Geode]]);
                 
-                var next = GetNextStates(candidate, blueprint).ToList();
+                var next = GetNextStates(candidate, blueprint, minutesMax).ToList();
 
                 candidate.Res[Mineral.Ore] += candidate.Bot[Mineral.Ore];
                 candidate.Res[Mineral.Clay] += candidate.Bot[Mineral.Clay];
@@ -111,51 +116,19 @@ namespace Adventofcode2022.Puzzles
 
                 candidate.Next = next;
                 
-                candidates.InsertRange(0, candidate.Next);
+                candidates.AddRange(candidate.Next);
 
                 max = Math.Max(max, candidate.Res[Mineral.Geode]);
             }
 
-            //Console.WriteLine($"   {blueprint.Id}: {max}");
-            /*
-                1: 1
-                2: 3
-                3: 3
-                4: 1
-                5: 10
-                6: 3
-                7: 0
-                8: 3
-                9: 3
-                10: 2
-                11: 3
-                12: 9
-                13: 1
-                14: 15
-                15: 0
-                16: 1
-                17: 5
-                18: 0
-                19: 1
-                20: 0
-                21: 2
-                22: 0
-                23: 9
-                24: 1
-                25: 2
-                26: 3
-                27: 2
-                28: 0
-                29: 1
-                30: 0
-             */
-            
+            //Console.WriteLine($"   {blueprint.Id, 2}: {max} [minutesMax:{minutesMax}]");
+
             return max;
         }
 
-        private IEnumerable<State> GetNextStates(State candidate, Blueprint blueprint)
+        private IEnumerable<State> GetNextStates(State candidate, Blueprint blueprint, int minutesMax)
         {
-            if (candidate.Minute == 24)
+            if (candidate.Minute == minutesMax)
             {
                 yield break;
             }
@@ -259,3 +232,42 @@ namespace Adventofcode2022.Puzzles
         }
     }
 }
+
+/*
+ Task1:
+    1: 1 [minutesMax:24]
+    2: 3 [minutesMax:24]
+    3: 3 [minutesMax:24]
+    4: 1 [minutesMax:24]
+    5: 10 [minutesMax:24]
+    6: 3 [minutesMax:24]
+    7: 0 [minutesMax:24]
+    8: 3 [minutesMax:24]
+    9: 3 [minutesMax:24]
+   10: 2 [minutesMax:24]
+   11: 3 [minutesMax:24]
+   12: 9 [minutesMax:24]
+   13: 1 [minutesMax:24]
+   14: 15 [minutesMax:24]
+   15: 0 [minutesMax:24]
+   16: 1 [minutesMax:24]
+   17: 5 [minutesMax:24]
+   18: 0 [minutesMax:24]
+   19: 1 [minutesMax:24]
+   20: 0 [minutesMax:24]
+   21: 2 [minutesMax:24]
+   22: 0 [minutesMax:24]
+   23: 9 [minutesMax:24]
+   24: 1 [minutesMax:24]
+   25: 2 [minutesMax:24]
+   26: 3 [minutesMax:24]
+   27: 2 [minutesMax:24]
+   28: 0 [minutesMax:24]
+   29: 1 [minutesMax:24]
+   30: 0 [minutesMax:24]
+    
+Task:
+    1: 21 [minutesMax:32]
+    2: 27 [minutesMax:32]
+    3: 38 [minutesMax:32]
+ */
