@@ -16,36 +16,41 @@ namespace Adventofcode2022.Puzzles
 
         private Dictionary<string, string> _map = new Dictionary<string, string>
         {
-            ["C01"] = "E10",
-            ["C02"] = "F01",
-            ["C13"] = "G31",
-            ["E01"] = "C10",
-            ["F01"] = "C02",
-            ["E02"] = "L32",
-            ["G13"] = "L10",
-            ["E23"] = "K32",
-            ["F23"] = "K20",
-            ["L01"] = "G13",
-            ["K02"] = "F32",
-            ["L13"] = "C31",
-            ["K23"] = "E32",
-            ["L23"] = "E20",
+            ["B01"] = "J02",
+            ["J02"] = "B01",
+
+            ["C01"] = "J23",
+            ["J23"] = "C01",
+            
+            ["B02"] = "G20",
+            ["G02"] = "B20",
+            
+            ["E02"] = "G01",
+            ["G01"] = "E02",
+            
+            ["E02"] = "G01",
+            ["G01"] = "E02",
+
+            ["C13"] = "H31",
+            ["H13"] = "C31",
+            
+            ["C23"] = "E13",
+            ["E13"] = "C23",
+            
+            ["H23"] = "J13",
+            ["J13"] = "H23",
         };
 
         public override string[] GetResults(IReadOnlyList<string> input)
         {
-            var field1 = ReadField(input.Take(input.Count - 2).ToList());
+            var field = ReadField(input.Take(input.Count - 2).ToList());
             var steps = ReadSteps(input[^1]).ToList();
             var startX = input[0].ToCharArray().TakeWhile(x => x == ' ').Count();
             
-            var field2 = PreprocessField(field1);
-            
-            Util.PrintMap(field2);
-
             return new[]
             {
-                DoTask(field1, steps, startX, 1).ToString(),   //75388
-                DoTask(field2, steps, startX, 2).ToString()
+                DoTask(field, steps, startX, 1).ToString(),   //75388
+                DoTask(field, steps, startX, 2).ToString()
             };
         }
 
@@ -78,22 +83,12 @@ namespace Adventofcode2022.Puzzles
                         ? GetNextPos1(result, field) 
                         : GetNextPos2(result, field);
                     
-                    //Console.WriteLine($"{result.X,2}:{result.Y,2} {nextPos.X,2}:{nextPos.Y,2} {field.GetLength(0)}:{field.GetLength(1)}");
-
                     if (field[nextPos.X, nextPos.Y] == '#')
                     {
                         break;
                     }
 
                     result = nextPos;
-
-                    var tmp = field[result.X, result.Y];
-                        
-                    field[result.X, result.Y] = '@';
-                    
-                    Util.PrintMap(field);
-
-                    field[result.X, result.Y] = tmp;
                 }
             }
             else
@@ -116,43 +111,124 @@ namespace Adventofcode2022.Puzzles
         private Pos GetNextPos2(in Pos pos, char[,] field)
         {
             var result = pos;
-            
-            var sideSizeX = field.GetLength(0) / 4;
-            var sideSizeY = field.GetLength(1) / 3;
 
-            while (true)
+            result.X += pos.Dir.X;
+            result.Y += pos.Dir.Y;
+
+            var isInvalid = result.X == field.GetLength(0) ||
+                            result.Y == field.GetLength(1) ||
+                            result.X == -1 ||
+                            result.Y == -1 ||
+                            field[result.X, result.Y] == ' ';
+
+            if (isInvalid)
             {
-                result.X += pos.Dir.X;
-                result.Y += pos.Dir.Y;
-
-                var deltaX = result.X % sideSizeX;
-                var deltaY = result.Y % sideSizeX;
-                var negDeltaX = sideSizeX - deltaX - 1;
-                var negDeltaY = sideSizeY - deltaY - 1;
-                
-                
-                
+                result = DoThings(in pos, field);
             }
 
             return result;
         }
 
+        private Pos DoThings(in Pos pos, char[,] field)
+        {
+            var sideSizeX = field.GetLength(0) / 3;
+            var sideSizeY = field.GetLength(1) / 4;
+
+            var minX = 0;
+            var minY = 0;
+            var maxX = sideSizeX - 1;
+            var maxY = sideSizeY - 1;
+            
+            var delta = 0;
+            var negDelta = 0;
+
+            var code = "";
+            if (pos.Dir == Dir.Up)
+            {
+                code = "01";
+                delta = pos.X % sideSizeX;
+                negDelta = sideSizeX - delta - 1;
+            }
+
+            if (pos.Dir == Dir.Left)
+            {
+                code = "02";
+                delta = pos.Y % sideSizeY;
+                negDelta = sideSizeY - delta - 1;
+            }
+
+            if (pos.Dir == Dir.Right)
+            {
+                code = "13";
+                delta = pos.Y % sideSizeY;
+                negDelta = sideSizeY - delta - 1;
+            }
+
+            if (pos.Dir == Dir.Down)
+            {
+                code = "23";
+                delta = pos.X % sideSizeX;
+                negDelta = sideSizeX - delta - 1;
+            }
+
+            var from = $"{PosToSide(pos, field)}{code}";
+            var to = _map[from];
+            
+            var offset = to.Substring(1) switch
+            {
+                "01" => (delta, minY),
+                "10" => (negDelta, minY),
+                "02" => (minX, delta),
+                "20" => (minX, negDelta),
+                "13" => (maxX, delta),
+                "31" => (maxX, negDelta),
+                "23" => (delta, maxY),
+                "32" => (negDelta, maxY),
+            };
+            
+            var dir = to.Substring(1) switch
+            {
+                "01" => Dir.Down,
+                "10" => Dir.Down,
+                "02" => Dir.Right,
+                "20" => Dir.Right,
+                "13" => Dir.Left,
+                "31" => Dir.Left,
+                "23" => Dir.Up,
+                "32" => Dir.Up,
+            };
+
+            var result = SideToPos(to, field);
+
+            result.X += offset.Item1;
+            result.Y += offset.Item2;
+            result.Dir = dir;
+            
+            return result;
+        }
 
         private string PosToSide(Pos pos, char[,] field)
         {
-            var result = 'A' + pos.X + pos.Y * field.GetLength(0);
-            return result.ToString();
+            var sideSizeX = field.GetLength(0) / 3;
+            var sideSizeY = field.GetLength(1) / 4;
+            var sideX = pos.X / sideSizeX;
+            var sideY = pos.Y / sideSizeY;
+            var result = 'A' + sideX + sideY * 3;
+            return ((char) result).ToString();
         }
         
         private Pos SideToPos(string side, char[,] field)
         {
-            var sizeX = field.GetLength(0);
-            var sideChar = side[0];
+            var sideX = 3;
+            var sideSizeX = field.GetLength(0) / 3;
+            var sideSizeY = field.GetLength(1) / 4;
+            
+            var sideChar = side[0] - 'A';
 
             return new Pos
             {
-                X = sideChar % sizeX,
-                Y = sideChar / sizeX,
+                X = (sideChar % sideX) * sideSizeX,
+                Y = (sideChar / sideX) * sideSizeY,
             };
         }
         
@@ -190,40 +266,6 @@ namespace Adventofcode2022.Puzzles
             };
 
             return 1000 * (pos.Y + 1) + 4 * (pos.X + 1) + dir;
-        }
-        
-        private char[,] PreprocessField(char[,] field)
-        {
-            var length0 = field.GetLength(0);
-            var length1 = field.GetLength(1);
-            
-            var result = new char[length0, length1];
-            
-            for (var y = 0; y < length1; y++)
-            {
-                for (var x = 0; x < length0; x++)
-                {
-                    result[x, y] = field[x, y];
-                }
-            }
-
-            var sideSizeX = length0 / 4;
-            var sideSizeY = length1 / 3;
-
-            for (var y = 0; y < sideSizeY; y++)
-            {
-                for (var x = 0; x < sideSizeX; x++)
-                {
-                    result[x + (sideSizeX * 0), y + (sideSizeY * 0)] = '1';
-                    result[x + (sideSizeX * 1), y + (sideSizeY * 0)] = '2';
-                    result[x + (sideSizeX * 3), y + (sideSizeY * 0)] = '3';
-                    result[x + (sideSizeX * 3), y + (sideSizeY * 1)] = '4';
-                    result[x + (sideSizeX * 0), y + (sideSizeY * 2)] = '5';
-                    result[x + (sideSizeX * 1), y + (sideSizeY * 2)] = '6';
-                }
-            }
-
-            return result;
         }
 
         private char[,] ReadField(IReadOnlyList<string> input)
