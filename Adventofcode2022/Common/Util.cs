@@ -21,5 +21,16 @@ namespace Adventofcode2022.Common
             
             Console.WriteLine(sb.ToString());
         }
+
+        public static void FillMap(char[,] data, char input)
+        {
+            for (var y = 0; y < data.GetLength(1); y++)
+            {
+                for (var x = 0; x < data.GetLength(0); x++)
+                {
+                    data[x, y] = input;
+                }
+            }
+        }
     }
 }
