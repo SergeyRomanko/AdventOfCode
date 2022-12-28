@@ -133,8 +133,6 @@ namespace Adventofcode2022.Puzzles
 
         public bool IsValid(Vec2 data)
         {
-            Console.WriteLine();
-            
             if (data == _start)
             {
                 return true;

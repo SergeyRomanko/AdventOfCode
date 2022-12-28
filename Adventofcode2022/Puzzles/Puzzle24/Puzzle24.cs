@@ -7,7 +7,14 @@ namespace Adventofcode2022.Puzzles
 {
     public class Puzzle24 : Puzzle
     {
-        private int _task1 = int.MaxValue;
+        private struct State
+        {
+            public Vec2 Pos;
+            public int Step;
+            public Puzzle24Container Container;
+            public int Heuristic => ((Container.Finish.x - Pos.x) + (Container.Finish.y - Pos.y));
+        }
+        
         private int cnt = 0;
         
         private readonly Vec2[] _offsets = new []
@@ -28,54 +35,66 @@ namespace Adventofcode2022.Puzzles
             };
         }
 
-        private int DoTask1(Puzzle24Container container)
+        private int DoTask1(Puzzle24Container startContainer)
         {
-            Task1(container.Start, 0, container);
-            
-            return _task1;
-        }
+            var result = int.MaxValue;
+            var candidates = new List<State>
+            {
+                new State
+                {
+                    Pos = startContainer.Start,
+                    Step = 0,
+                    Container = startContainer.NextStep()
+                }
+            };
 
-        private void Task1(Vec2 me, int step, Puzzle24Container container)
-        {
-            if (cnt++ > 20)
+            while (candidates.Count > 0)
             {
-                return;
-            }
-            
-            container.Print(me);
-            
-            var eur = (container.Finish.x - me.x) + (container.Finish.y - me.y);
-            
-            Console.WriteLine($" >>> {me} {step} {eur} {container.Finish} {_task1}");
-            
-            if (me == container.Finish)
-            {
-                _task1 = Math.Min(_task1, step);
+                var state = candidates.Aggregate((a, b) => a.Heuristic < b.Heuristic ? a : b);
+
+                candidates.Remove(state);
                 
-                return;
+                Console.WriteLine($" >>> {state.Pos} {state.Step} {state.Container.Finish} {result}");
+                
+                state.Container.Print(state.Pos);
+                
+                if (state.Pos == state.Container.Finish)
+                {
+                    result = Math.Min(result, state.Step);
+                
+                    continue;
+                }
+
+                if (state.Step >= result)
+                {
+                    continue;
+                }
+
+                var eur = (state.Container.Finish.x - state.Pos.x) + (state.Container.Finish.y - state.Pos.y);
+                if (state.Step + eur >= result)
+                {
+                    continue;
+                }
+                
+                var neighb = _offsets
+                    .Select(x => state.Pos + x)
+                    .Where(state.Container.IsValid)
+                    .OrderBy(x => (state.Container.Finish.x - x.x) + (state.Container.Finish.y - x.y))
+                    .ToArray();
+
+                var nextContainer = state.Container.NextStep();
+                for (var i = 0; i < neighb.Length; i++)
+                {
+                    candidates.Add(new State()
+                    {
+                        Pos = neighb[i],
+                        Step = state.Step + 1,
+                        Container = nextContainer
+                    });
+                }
             }
-
-            if (step >= _task1)
-            {
-                return;
-            }
-
-            var candidates = _offsets
-                .Select(x => me + x)
-                .Where(container.IsValid)
-                .OrderBy(x => (container.Finish.x - x.x) + (container.Finish.y - x.y))
-                .ToArray();
-
-            Console.WriteLine($" >>> {step} Candidates:{candidates.Length}");
             
-            var nextContainer = container.NextStep();
-            
-            for (var i = 0; i < candidates.Length; i++)
-            {
-                Task1(candidates[i], step + 1, nextContainer);
-            }
-
-            Console.WriteLine($" <<< {step}");
+            return result;
         }
     }
 }
