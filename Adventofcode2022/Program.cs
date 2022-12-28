@@ -31,7 +31,8 @@ namespace Adventofcode2022
             new Puzzle20(),
             new Puzzle21(),
             new Puzzle22(),
-            new Puzzle23(),
+            //new Puzzle23(),
+            new Puzzle24(),
         };
         
         public static void Main(string[] args)
