@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using Adventofcode2022.Common;
 
@@ -9,7 +8,7 @@ namespace Adventofcode2022.Puzzles
 {
     public class Puzzle16 : Puzzle
     {
-        private class Node
+        public class Node
         {
             public string Name;
             public int Hash;
@@ -49,124 +48,37 @@ namespace Adventofcode2022.Puzzles
 
             var start = allNodes.First(x => x.Name == "AA");
             
-            return new[]
-            {
-                DoPart1(start, 30, allNodes).ToString(),
-                ""
-            };
-        }
-
-        private int DoPart1(Node start, int steps, List<Node> all)
-        {
-            var result = 0;
-
-            var targets = all.Where(x => x.Preassure > 0).ToList();
+            var nodesWithPressure = allNodes.Where(x => x.Preassure > 0).ToList();
             
-            targets.Add(start);
+            nodesWithPressure.Add(start);
             
             var distances = new DistanceCache();
-            for (int i = 0; i < targets.Count; i++)
+            for (int i = 0; i < nodesWithPressure.Count; i++)
             {
-                for (int j = 0; j < targets.Count; j++)
+                for (int j = 0; j < nodesWithPressure.Count; j++)
                 {
-                    var from = targets[i];
-                    var to = targets[j];
+                    var from = nodesWithPressure[i];
+                    var to = nodesWithPressure[j];
                     
-                    distances.AddDistance(from, to, Distance(from, to, all));
+                    distances.AddDistance(from, to, Distance(from, to, allNodes));
                 }
             }
             
-            targets.Remove(start);
+            //В моем конфиге в кране start давление 0, поэтому кран start не рассматриваем
+            nodesWithPressure.Remove(start);
 
-            var util = new PermuteUtil
+            var util = new Puzzle16PermuteUtil
             {
                 Distances = distances,
-                Steps = steps,
+                StepsLeft = 30,
                 PrevNode = start,
             };
             
-            /*
-            var permute = Permute(targets, util);
-            foreach (var val in permute)
+            return new[]
             {
-                Console.WriteLine($"   {string.Join(" ", val.Nodes.Select(x => x.Name))} => {val.Result}");
-            }
-            */
-            
-            var val = Permute(targets, util)
-                .Aggregate((a, b) => a.Result > b.Result ? a : b)
-                ;
-
-            result = val.Result;
-            
-            Console.WriteLine($"   {string.Join(" ", val.Nodes.Select(x => x.Name))} => {val.Result}");
-
-            return result;
-        }
-
-        private static IEnumerable<PermuteResult> Permute(IEnumerable<Node> sequence, PermuteUtil util)
-        {
-            if (sequence == null)
-            {
-                yield break;
-            }
-        
-            var list = sequence.ToList();
-        
-            if (!list.Any())
-            {
-                util.Result += util.Preasure * util.Steps;
-                
-                yield return new PermuteResult
-                {
-                    Result = util.Result,
-                    Nodes = Enumerable.Empty<Node>()
-                };
-            }
-            else
-            {
-                foreach (Node currentNode in list)
-                {
-                    var nextNodeUtil = new PermuteUtil
-                    {
-                        Distances = util.Distances,
-                        Preasure = util.Preasure,
-                        Result = util.Result,
-                        Steps = util.Steps,
-                        PrevNode = currentNode
-                    };
-                    
-                    //======================================
-                    var distance = 1 + util.Distances.GetDistance(util.PrevNode, currentNode);
-
-                    nextNodeUtil.Result += nextNodeUtil.Preasure * Math.Min(distance, util.Steps);
-
-                    if (distance > nextNodeUtil.Steps)
-                    {
-                        yield return new PermuteResult
-                        {
-                            Result = nextNodeUtil.Result,
-                            Nodes = Enumerable.Empty<Node>()
-                        };
-
-                        continue;
-                    }
-
-                    nextNodeUtil.Steps -= distance;
-                    nextNodeUtil.Preasure += currentNode.Preassure;
-                    
-                    //======================================
-                    
-                    var remainingItems = list.Where(x => x != currentNode);
-        
-                    foreach (var result in Permute(remainingItems, nextNodeUtil))
-                    {
-                        result.Nodes = result.Nodes.Prepend(currentNode);
-                        
-                        yield return result;
-                    }
-                }
-            }
+                Puzzle16Task1.Permute(nodesWithPressure, util).Max().ToString(),
+                ""
+            };
         }
 
         private int Distance(Node from, Node to, List<Node> all)
@@ -199,22 +111,7 @@ namespace Adventofcode2022.Puzzles
             return -1;
         }
 
-        private struct PermuteUtil
-        {
-            public DistanceCache Distances;
-            public Node PrevNode;
-            public int Preasure;
-            public int Result;
-            public int Steps;
-        }
-        
-        private class PermuteResult
-        {
-            public int Result;
-            public IEnumerable<Node> Nodes;
-        }
-
-        private class DistanceCache
+        public class DistanceCache
         {
             private readonly Dictionary<int, int> _cache = new();
 
@@ -236,37 +133,3 @@ namespace Adventofcode2022.Puzzles
         }
     }
 }
-
-/*
-private static IEnumerable<IEnumerable<T>> Permute<T>(IEnumerable<T> sequence)
-{
-    if (sequence == null)
-    {
-        yield break;
-    }
-        
-    var list = sequence.ToList();
-        
-    if (!list.Any())
-    {
-        yield return Enumerable.Empty<T>();
-    }
-    else
-    {
-        var startingElementIndex = 0;
-        
-        foreach (var startingElement in list)
-        {
-            var index = startingElementIndex;
-            var remainingItems = list.Where((e, i) => i != index);
-        
-            foreach (var permutationOfRemainder in Permute(remainingItems))
-            {
-                yield return permutationOfRemainder.Prepend(startingElement);
-            }
-        
-            startingElementIndex++;
-        }
-    }
-}
-*/
