@@ -36,8 +36,17 @@ namespace Adventofcode2022.Puzzles
             return new[]
             {
                 DoTask1(initialState, initialState.Start, initialState.Finish).Step.ToString(),
-                ""
+                DoTask2(initialState).ToString()
             };
+        }
+
+        private int DoTask2(Puzzle24Container initialState)
+        {
+            var phase1 = DoTask1(initialState, initialState.Start, initialState.Finish);
+            var phase2 = DoTask1(phase1.Container, initialState.Finish, initialState.Start);
+            var phase3 = DoTask1(phase2.Container, initialState.Start, initialState.Finish);
+            
+            return phase1.Step + (phase2.Step + 1) + (phase3.Step + 1);
         }
 
         private State DoTask1(Puzzle24Container startContainer, Vec2 from, Vec2 to)
@@ -65,13 +74,8 @@ namespace Adventofcode2022.Puzzles
                 var state = candidates.Aggregate((a, b) => a.Heuristic < b.Heuristic ? a : b);
 
                 candidates.Remove(state);
-                
-                if (candidates.Count % 100 == 0)
-                {
-                    Debug.Log($" >>> [{state.GetHashCode():X4}] Pos:{state.Pos} Step:{state.Step} Heuristic:{state.Heuristic} {result.Step}");
-                }
-                
-                if (state.Pos == state.Container.Finish)
+
+                if (state.Pos == to)
                 {
                     result = result.Step <= state.Step ? result : state;
                 
