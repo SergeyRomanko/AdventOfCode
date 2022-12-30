@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Adventofcode2022.Common;
 
@@ -52,8 +51,6 @@ namespace Adventofcode2022.Puzzles
 
         private int GetRucksackResult(string a, string b)
         {
-            Debug.Assert(a.Length == b.Length);
-
             var arr = new int[52 + 1];
             
             for (var i = 0; i < a.Length; i++)

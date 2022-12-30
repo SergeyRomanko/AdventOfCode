@@ -21,6 +21,8 @@ namespace Adventofcode2022.Common
         
         public static Vec2 operator +(Vec2 a, Vec2 b) => new(a.x + b.x, a.y + b.y);
 
+        public static int ManhattanDistance(Vec2 a, Vec2 b) => Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
+
         public override int GetHashCode()
         {
             return HashCode.Combine(x, y);

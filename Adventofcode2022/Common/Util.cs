@@ -1,11 +1,10 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace Adventofcode2022.Common
 {
     public static class Util
     {
-        public static void PrintMap(char[,] data)
+        public static string ToText(char[,] data)
         {
             var sb = new StringBuilder();
 
@@ -18,8 +17,8 @@ namespace Adventofcode2022.Common
 
                 sb.AppendLine();
             }
-            
-            Console.WriteLine(sb.ToString());
+
+            return sb.ToString();
         }
 
         public static void FillMap(char[,] data, char input)
