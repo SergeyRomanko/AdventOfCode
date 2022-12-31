@@ -8,5 +8,17 @@
         public int Pressure;
         public int Result;
         public int StepsLeft;
+
+        public Puzzle16PermuteUtil Clone()
+        {
+            return new Puzzle16PermuteUtil
+            {
+                Distances = Distances,
+                PrevNode = PrevNode,
+                Pressure = Pressure,
+                Result = Result,
+                StepsLeft = StepsLeft
+            };
+        }
     }
 }

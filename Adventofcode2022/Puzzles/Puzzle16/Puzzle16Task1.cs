@@ -6,32 +6,23 @@ namespace Adventofcode2022.Puzzles
 {
     public class Puzzle16Task1
     {
-
-        
         public static IEnumerable<int> Permute(IReadOnlyList<Puzzle16.Node> sequence, Puzzle16PermuteUtil util)
         {
             foreach (Puzzle16.Node currentNode in sequence)
             {
-                var nextNodeUtil = new Puzzle16PermuteUtil
-                {
-                    Distances = util.Distances,
-                    Pressure = util.Pressure,
-                    Result = util.Result,
-                    StepsLeft = util.StepsLeft,
-                    PrevNode = currentNode
-                };
-                
                 var distance = 1 + util.Distances.GetDistance(util.PrevNode, currentNode);
-
-                nextNodeUtil.Result += util.Pressure * Math.Min(distance, util.StepsLeft);
+                var currentResult = util.Result + util.Pressure * Math.Min(distance, util.StepsLeft);
 
                 if (distance > util.StepsLeft)
                 {
-                    yield return nextNodeUtil.Result;
+                    yield return currentResult;
 
                     continue;
                 }
 
+                var nextNodeUtil = util.Clone();
+                nextNodeUtil.PrevNode = currentNode;
+                nextNodeUtil.Result = currentResult;
                 nextNodeUtil.StepsLeft -= distance;
                 nextNodeUtil.Pressure += currentNode.Preassure;
                 
