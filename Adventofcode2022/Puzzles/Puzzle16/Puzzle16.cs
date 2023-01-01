@@ -73,11 +73,12 @@ namespace Adventofcode2022.Puzzles
                 StepsLeft = 30,
                 PrevNode = start,
             };
+
             
             return new[]
             {
                 Puzzle16Task1.Permute(nodesWithPressure, util).Max().ToString(),
-                ""
+                Puzzle16Task2.DoTask(nodesWithPressure, distances, start).ToString()
             };
         }
 

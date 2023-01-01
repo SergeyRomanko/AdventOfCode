@@ -6,22 +6,75 @@ namespace Adventofcode2022.Puzzles
 {
     public sealed class Puzzle16Task2
     {
+        private static int _maxResult = int.MinValue;
+        
+        public static int DoTask(
+            List<Puzzle16.Node> nodesWithPressure,
+            Puzzle16.DistanceCache distances,
+            Puzzle16.Node start)
+        {
+            
+            var playerA = new Puzzle16PermuteUtil
+            {
+                Distances = distances,
+                StepsLeft = 26,
+                PrevNode = start
+            };
+            
+            var playerB = new Puzzle16PermuteUtil
+            {
+                Distances = distances,
+                StepsLeft = 26,
+                PrevNode = start
+            };
+            
+            foreach (var value in Permute(nodesWithPressure, playerA, playerB))
+            {
+                if (value > _maxResult)
+                {
+                    _maxResult = value;
+                }
+            }
+
+            return _maxResult;
+        }
+        
         public static IEnumerable<int> Permute(IReadOnlyList<Puzzle16.Node> sequence, Puzzle16PermuteUtil playerA, Puzzle16PermuteUtil playerB)
         {
             foreach (var (nodeA, nodeB) in GetPairs(sequence))
             {
+                if (sequence.Count == 15)
+                {
+                    Console.WriteLine($"   nodeA:{nodeA.Name} nodeB:{nodeB.Name} MaxResult:{_maxResult}");
+                }
+                
                 var newPlayerA = DoThings(playerA, nodeA);
                 var newPlayerB = DoThings(playerB, nodeB);
 
+                var noStepsLeft = newPlayerA.StepsLeft <= 0 && newPlayerB.StepsLeft <= 0;
+                if (noStepsLeft)
+                {
+                    yield return GetResult(newPlayerA, newPlayerB);
+                    
+                    continue;
+                }
+                
                 var remainingItems = sequence
                     .Where(x => x != nodeA && x != nodeB)
                     .ToList();
                 
                 if (remainingItems.Count == 0)
                 {
-                    ???;
+                    yield return GetResult(newPlayerA, newPlayerB);
                     
-                    yield return nextNodeUtil.Result + nextNodeUtil.Pressure * nextNodeUtil.StepsLeft;
+                    continue;
+                }
+
+                //Если максимальный возможный результат для этой комбинации меньше текущего лучшего результата, то не рассматриваем эту комбинацию
+                var superOptimisticResult = GetMaxAvailableResult(remainingItems, newPlayerA, newPlayerB);
+                if (superOptimisticResult <= _maxResult)
+                {
+                    yield return -1;
                     
                     continue;
                 }
@@ -33,25 +86,25 @@ namespace Adventofcode2022.Puzzles
             }
         }
 
-        private static Puzzle16PermuteUtil DoThings(Puzzle16PermuteUtil player, Puzzle16.Node? nodeA)
+        private static Puzzle16PermuteUtil DoThings(Puzzle16PermuteUtil player, Puzzle16.Node? node)
         {
             var result = player.Clone();
             
-            if (nodeA == null)
+            if (node == null)
             {
                 return result;
             }
             
-            var distance = 1 + player.Distances.GetDistance(player.PrevNode, nodeA);
+            var distance = 1 + player.Distances.GetDistance(player.PrevNode, node);
             var realDistance = Math.Min(distance, player.StepsLeft);
 
-            result.PrevNode = nodeA;
+            result.PrevNode = node;
             result.Result += player.Pressure * realDistance;
             result.StepsLeft -= realDistance;
 
             if (distance <= player.StepsLeft)
             {
-                result.Pressure += nodeA.Preassure;
+                result.Pressure += node.Preassure;
             }
 
             return result;
@@ -84,9 +137,30 @@ namespace Adventofcode2022.Puzzles
                 }
             }
         }
+        
+        private static int GetResult(Puzzle16PermuteUtil playerA, Puzzle16PermuteUtil playerB)
+        {
+            var resultA = playerA.Result + playerA.Pressure * playerA.StepsLeft;
+            var resultB = playerB.Result + playerB.Pressure * playerB.StepsLeft;
+                    
+            return resultA + resultB;
+        }
+        
+        //Какой результат у нас получится если открыть все оставшиеся краны прямо сейчас
+        private static int GetMaxAvailableResult(IReadOnlyList<Puzzle16.Node> sequence, Puzzle16PermuteUtil playerA, Puzzle16PermuteUtil playerB)
+        {
+            var curResult = GetResult(playerA, playerB);
+
+            var maxSteps = Math.Max(playerA.StepsLeft, playerB.StepsLeft);
+
+            var maxAvailableSteam = 0;
+            
+            for (var i = 0; i < sequence.Count; i++)
+            {
+                maxAvailableSteam += sequence[i].Preassure * maxSteps;
+            }
+            
+            return curResult + maxAvailableSteam;
+        }
     }
 }
-
-/*
-
-*/
