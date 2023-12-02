@@ -33,9 +33,14 @@ namespace AdventOfCode
             new Year2022.Puzzle25(),
         };
         
+        private static readonly Puzzle[] Year2023Puzzles = 
+        {
+            new Year2023.Puzzle01(),
+        };
+        
         public static void Main(string[] args)
         {
-            foreach (var puzzle in Year2022Puzzles)
+            foreach (var puzzle in Year2023Puzzles)
             {
                 var input = Inputs.ReadText(puzzle.Name).ToList();
                 
