@@ -36,6 +36,7 @@ namespace AdventOfCode
         private static readonly Puzzle[] Year2023Puzzles = 
         {
             new Year2023.Puzzle01(),
+            new Year2023.Puzzle02(),
         };
         
         public static void Main(string[] args)
