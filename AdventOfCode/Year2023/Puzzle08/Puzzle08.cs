@@ -19,7 +19,7 @@ namespace AdventOfCode.Year2023
             
             return new[]
             {
-                //Part1(data, dirs).ToString(),
+                Part1(data, dirs).ToString(),
                 Part2(data, dirs).ToString(),
             };
         }
@@ -38,12 +38,13 @@ namespace AdventOfCode.Year2023
             return counter;
         }
         
-        private int Part2(Dictionary<string, List<string>> data, List<int> dirs)
+        private long Part2(Dictionary<string, List<string>> data, List<int> dirs)
         {
             var initial = data.Keys.Where(x => x.EndsWith("A")).ToList();
             var lists   = initial.Select(x => new List<int>()).ToList();
             
-            for (int i = 0; i < 3000000; i++)
+            //Тут магия
+            for (int i = 0; i < 50000; i++)
             {
                 var dir = dirs[i % dirs.Count];
 
@@ -63,8 +64,7 @@ namespace AdventOfCode.Year2023
                 list[0] -= list[1];
             }
             
-
-            var data1  = lists.Select(x => x[0]).ToArray();
+            var data1  = lists.Select(x => (long) x[0]).ToArray();
             var result = FindLCMOfArray(data1);
             
             return result;
@@ -80,30 +80,24 @@ namespace AdventOfCode.Year2023
             };
         }
 
-        static int FindGCD(int a, int b)
+        static long nod(long a, long b)
         {
-            while (b != 0)
-            {
-                int temp = b;
-                b = a % b;
-                a = temp;
-            }
-            return a;
+            return b == 0 ? a : nod (b, a % b);
         }
-
-        static int FindLCM(int a, int b)
+        
+        static long FindLCM(long t1, long t2)
         {
-            return Math.Abs(a * b) / FindGCD(a, b);
+            return t1 * (t2 / nod(t1, t2));
         }
-
-        static int FindLCMOfArray(int[] numbers)
+        
+        static long FindLCMOfArray(long[] numbers)
         {
             if (numbers == null || numbers.Length == 0)
             {
                 throw new ArgumentException("Array must contain at least one number");
             }
 
-            int lcm = numbers[0];
+            long lcm = numbers[0];
 
             for (int i = 1; i < numbers.Length; i++)
             {
