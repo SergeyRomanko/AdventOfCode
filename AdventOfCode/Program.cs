@@ -42,6 +42,7 @@ namespace AdventOfCode
             new Year2023.Puzzle05(),
             new Year2023.Puzzle06(),
             new Year2023.Puzzle07(),
+            new Year2023.Puzzle08(),
         };
         
         public static void Main(string[] args)
