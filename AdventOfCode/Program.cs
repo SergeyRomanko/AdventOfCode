@@ -44,6 +44,7 @@ namespace AdventOfCode
             new Year2023.Puzzle07(),
             new Year2023.Puzzle08(),
             new Year2023.Puzzle09(),
+            new Year2023.Puzzle10(),
         };
         
         public static void Main(string[] args)
@@ -56,6 +57,8 @@ namespace AdventOfCode
                 
                 Console.WriteLine($"{puzzle.Name}: {string.Join(", ", results)}");
             }
+
+            Console.ReadLine();
         }
     }
 }
