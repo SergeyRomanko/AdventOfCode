@@ -191,6 +191,9 @@
       <None Update="Year2023\Puzzle10\Puzzle10.txt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="Year2023\Puzzle11\Puzzle11.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
