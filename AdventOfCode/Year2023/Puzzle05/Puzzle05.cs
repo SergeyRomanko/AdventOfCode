@@ -4,20 +4,54 @@ namespace AdventOfCode.Year2023
 {
     public class Puzzle05 : Puzzle
     {
+        private struct Range
+        {
+            public long Start;
+            public long Length;
+
+            public bool IsInRange(long value)
+            {
+                var x = value - Start;
+                return 0 <= x && x < Length;
+            }
+        }
+        
+        private sealed class Map
+        {
+            public Range From;
+            public Range To;
+            
+            public Range MapTo(Range range)
+            {
+                if (!(From.Start <= range.Start && range.Start < (From.Start + From.Length)))
+                {
+                    throw new Exception();
+                }
+                
+                if (!(0 < range.Length && range.Length <= From.Length))
+                {
+                    throw new Exception();
+                }
+                
+                return new Range
+                {
+                    Start  = To.Start + (range.Start - From.Start),
+                    Length = range.Length
+                };
+            }
+        }
+        
         private sealed class Ranges
         {
-            public List<long> From   = new();
-            public List<long> To     = new();
-            public List<long> Length = new();
+            public List<Map> Maps = new();
 
-            public long Map(long value)
+            public Range Map(Range value)
             {
-                for (var i = 0; i < From.Count; i++)
+                for (var i = 0; i < Maps.Count; i++)
                 {
-                    var delta = value - From[i];
-                    if (delta >= 0 && delta < Length[i])
+                    if (Maps[i].From.IsInRange(value.Start))
                     {
-                        return To[i] + delta;
+                        return Maps[i].MapTo(value);
                     }
                 }
 
@@ -28,6 +62,7 @@ namespace AdventOfCode.Year2023
         private sealed class Data
         {
             public List<long> Seeds                 = new List<long>();
+            
             public Ranges     SeedToSoil            = new Ranges();
             public Ranges     SoilToFertilizer      = new Ranges();
             public Ranges     FertilizerToWater     = new Ranges();
@@ -46,26 +81,96 @@ namespace AdventOfCode.Year2023
             return new[]
             {
                 data.Seeds.Select(x => Part1(x,           data)).Min().ToString(),
-                //ToRanges(data.Seeds).Select(x => Part1(x, data)).Min().ToString(),
+                ToRanges(data.Seeds).Select(x => Part2(x, data)).Min().ToString(),
             };
         }
-        
-        private IEnumerable<long> ToRanges(List<long> dataSeeds)
-        {
-            for (var i = 0; i <= dataSeeds.Count / 2; i += 2)
-            {
-                var from = dataSeeds[i];
-                var len  = dataSeeds[i + 1];
 
-                for (var y = from; y < from + len; y++)
+        private long Part2(Range range, Data data)
+        {
+            var list1 = new List<Range> {range};
+
+            var sum1 = list1.Select(x => x.Length).Sum();
+
+            var list2 = DoThings(list1, data.SeedToSoil).ToList();
+            var list3 = DoThings(list2, data.SoilToFertilizer).ToList();
+            var list4 = DoThings(list3, data.FertilizerToWater).ToList();
+            var list5 = DoThings(list4, data.WaterToLight).ToList();
+            var list6 = DoThings(list5, data.LightToTemperature).ToList();
+            var list7 = DoThings(list6, data.TemperatureToHumidity).ToList();
+            var list8 = DoThings(list7, data.HumidityToLocation).ToList();
+            
+            var sum2 = list8.Select(x => x.Length).Sum();
+
+            if (sum1 != sum2)
+            {
+                throw new Exception();
+            }
+
+            return list8.Select(x => x.Start).Min();
+        }
+
+        private IEnumerable<Range> DoThings(List<Range> input, Ranges ranges)
+        {
+            for (var i = 0; i < input.Count; i++)
+            {
+                var range = input[i];
+                
+                while (range.Length > 0)
                 {
-                    yield return y;
+                    var subRange = GetNextRange(range, ranges);
+
+                    range = new Range
+                    {
+                        Start  = range.Start  + subRange.Length,
+                        Length = range.Length - subRange.Length
+                    };
+
+                    yield return subRange;
                 }
             }
         }
 
-        private long Part1(long value1, Data data)
+        private Range GetNextRange(Range range, Ranges ranges)
         {
+            foreach (var map in ranges.Maps)
+            {
+                if (map.From.IsInRange(range.Start))
+                {
+                    var length1 = (map.From.Start + map.From.Length) - range.Start;
+                    var length2 = range.Length;
+                    
+                    var subRange = range with
+                    {
+                        Length = Math.Min(length1, length2)
+                    };
+
+                    return map.MapTo(subRange);
+                }
+            }
+
+            throw new Exception();
+        }
+
+        private IEnumerable<Range> ToRanges(List<long> dataSeeds)
+        {
+            for (var i = 0; i < dataSeeds.Count; i += 2)
+            {
+                yield return new Range
+                {
+                    Start  = dataSeeds[i],
+                    Length = dataSeeds[i + 1]
+                };
+            }
+        }
+
+        private long Part1(long value0, Data data)
+        {
+            var value1 = new Range
+            {
+                Start  = value0,
+                Length = 1
+            };
+            
             var value2 = data.SeedToSoil.Map(value1);
             var value3 = data.SoilToFertilizer.Map(value2);
             var value4 = data.FertilizerToWater.Map(value3);
@@ -74,7 +179,7 @@ namespace AdventOfCode.Year2023
             var value7 = data.TemperatureToHumidity.Map(value6);
             var value8 = data.HumidityToLocation.Map(value7);
             
-            return value8;
+            return value8.Start;
         }
 
         private Data InputToData(List<string> inputList)
@@ -105,20 +210,73 @@ namespace AdventOfCode.Year2023
                     "humidity-to-location map:"    => data.HumidityToLocation,
                     _                              => throw new ArgumentOutOfRangeException()
                 };
+
+                var originalMaps = new List<Map>();
                 
                 for (var i = 1; i < group.Count; i++)
                 {
                     var split = group[i].Split();
-
-                    range.From.Add(long.Parse(split[1]));
-                    range.To.Add(long.Parse(split[0]));
-                    range.Length.Add(long.Parse(split[2]));
+                    
+                    originalMaps.Add(new Map
+                    {
+                        From = new Range
+                        {
+                            Start  = long.Parse(split[1]),
+                            Length = long.Parse(split[2])
+                        },
+                        To = new Range
+                        {
+                            Start  = long.Parse(split[0]),
+                            Length = long.Parse(split[2])
+                        }
+                    });
                 }
+                
+                range.Maps = CreateMaps(originalMaps);
             }
 
             return data;
         }
-        
+
+        private List<Map> CreateMaps(List<Map> originalMaps)
+        {
+            var gaps = new List<Map>();
+            var maps = originalMaps.OrderBy(x => x.From.Start).ToList();
+
+            var cursor = 0L;
+            
+            foreach (var map in maps)
+            {
+                var gap = CreateGap(cursor, map.From.Start - cursor);
+
+                if (gap.From.Length > 0)
+                {
+                    gaps.Add(gap);
+                }
+                
+                cursor += map.From.Length + gap.From.Length;
+            }
+            
+            gaps.Add(CreateGap(cursor, long.MaxValue - cursor));
+            
+            return originalMaps.Concat(gaps).OrderBy(x => x.From.Start).ToList();
+        }
+
+        private Map CreateGap(long start, long length)
+        {
+            var range = new Range
+            {
+                Start  = start,
+                Length = length
+            };
+
+            return new Map
+            {
+                From = range,
+                To   = range
+            };
+        }
+
         private IEnumerable<List<string>> GetGroup(List<string> inputList)
         {
             var result = new List<string>();
