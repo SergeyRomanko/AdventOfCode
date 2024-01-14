@@ -47,10 +47,11 @@ namespace AdventOfCode
             //new Year2023.Puzzle10(),
             new Year2023.Puzzle11(),
             //new Year2023.Puzzle12(),
-            new Year2023.Puzzle13(),
-            new Year2023.Puzzle14(),
-            new Year2023.Puzzle15(),
-            new Year2023.Puzzle16(),
+            //new Year2023.Puzzle13(),
+            //new Year2023.Puzzle14(),
+            //new Year2023.Puzzle15(),
+            //new Year2023.Puzzle16(),
+            new Year2023.Puzzle17(),
         };
         
         public static void Main(string[] args)
