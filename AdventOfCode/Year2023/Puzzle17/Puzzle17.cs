@@ -1,104 +1,93 @@
-﻿using System.Collections.Immutable;
-using AdventOfCode.Common;
+﻿using AdventOfCode.Common;
 
 namespace AdventOfCode.Year2023
 {
     public class Puzzle17 : Puzzle
     {
-        private List<Direction> AllDirs = new()
+        private readonly List<Direction> _allDirs = new()
         {
             Direction.Down, Direction.Up, Direction.Left, Direction.Right
         };
         
-
+        private record Crucible(Vec2 Pos, Direction Dir, int Straight);
         
         public override string[] GetResults(IReadOnlyList<string> input)
         {
-            var inputList = input.ToList();
-            var data      = ReadData(inputList);
-            
             return new[]
             {
-                Part1(data).ToString()
+                DoThings(input, 0, 03).ToString(),
+                DoThings(input, 4, 10).ToString(),
             };
         }
-
-        private int _result = int.MaxValue;
-
-        private int Part1(Dictionary<Vec2, int> data)
+        
+        private int DoThings(IReadOnlyList<string> input, int straightMin, int straightMax)
         {
-            var end = data.Keys.MaxBy(x => x.x + x.y);
+            var data    = ReadData(input.ToList());
+            var max     = data.Keys.MaxBy(x => x.x + x.y);
+            var visited = new HashSet<Crucible>();
+            var queue   = new PriorityQueue<Crucible, int>();
             
-            Step(Vec2.Zero, 0, 0, Direction.Right, end, data, ImmutableHashSet<int>.Empty);
+            queue.Enqueue(new Crucible(Vec2.Zero, Direction.Right, 0), 0);
+            queue.Enqueue(new Crucible(Vec2.Zero, Direction.Down, 0), 0);
+
+            while (queue.TryDequeue(out var crucible, out var heatlossCurrent))
+            {
+                if (crucible.Pos == max && crucible.Straight >= straightMin)
+                {
+                    return heatlossCurrent;
+                }
+                
+                foreach (var next in GetNextSteps(crucible, straightMin, straightMax))
+                {
+                    if (!visited.Add(next))
+                    {
+                        continue;   //Уже проверили
+                    }
+                    
+                    if (!data.TryGetValue(next.Pos, out var heatloss))
+                    {
+                        continue;   //За границами поля
+                    }
+                    
+                    queue.Enqueue(next, heatlossCurrent + heatloss);
+                }
+            }
             
-            Step(Vec2.Zero, 0, 0, Direction.Down, end, data, ImmutableHashSet<int>.Empty);
-            
-            return _result;
+            return -1;
         }
 
-        private void Step(Vec2 pos, int steps, int heatSum, Direction dir, Vec2 end, Dictionary<Vec2, int> data, ImmutableHashSet<int> hashSet)
+        private IEnumerable<Crucible> GetNextSteps(Crucible crucible, int straightMin, int straightMax)
         {
-            var hash = HashCode.Combine(pos/*, steps, dir*/);
-            if (hashSet.Contains(hash))
+            foreach (var dir in _allDirs)
             {
-                return;     //Тут мы уже были с теми же настройками, уходим
-            }
-            var nextSet = hashSet.Add(hash);
-            
-            if (!data.TryGetValue(pos, out var heat))
-            {
-                return;     //Эти координаты вне поля
-            }
-
-            heatSum += heat;
-            steps++;
-
-            if (heatSum + Vec2.ManhattanDistance(end, pos) > _result)
-            {
-                return;     //Текущая сумма уже хуже чем наш лучший результат
-            }
-
-            if (pos == end)
-            {
-                _result = Math.Min(_result, heatSum);
-                
-                Console.WriteLine($"{_result}");
-                
-                return;
-            }
-            
-            foreach (var nextDir in GetDirs(pos, dir, steps, end, data))
-            {
-                var nextSteps = nextDir != dir ? 0 : steps;
-                
-                Step(pos + nextDir.ToVec(), nextSteps, heatSum, nextDir, end, data, nextSet);
-            }
-        }
-
-        private IEnumerable<Direction> GetDirs(Vec2 pos, Direction dir, int steps, Vec2 end, Dictionary<Vec2, int> data)
-        {
-            var dirs = new List<(Direction, int)>();
-            
-            foreach (var nextDir in AllDirs)
-            {
-                if (nextDir == dir.ToOpposite())
+                if (dir == crucible.Dir.ToOpposite())
                 {
-                    continue; //Обрано не идем
+                    continue;   //Назад не идем
                 }
 
-                if (nextDir == dir && steps == 3)
+                if (dir == crucible.Dir)
                 {
-                    continue; //Не делаем больше 3х шагов в одном направлении
+                    if (crucible.Straight == straightMax)
+                    {
+                        continue;   //Больше максимума шагов не идем
+                    }
+                    
+                    yield return crucible with
+                    { 
+                        Pos      = crucible.Pos      + dir.ToVec(),
+                        Straight = crucible.Straight + 1
+                    };
                 }
-
-                var nextPos = pos + nextDir.ToVec();
-                if (data.TryGetValue(nextPos, out var heat))
+                else
                 {
-                    dirs.Add((nextDir, Vec2.ManhattanDistance(end, nextPos)));
+                    if (crucible.Straight < straightMin)
+                    {
+                        continue;   //Можем идти только прямо
+                    }
+                    
+                    yield return new Crucible(crucible.Pos + dir.ToVec(), dir, 1);
                 }
             }
-            
-            return dirs.OrderBy(x => x.Item2).Select(x => x.Item1);
         }
 
         private Dictionary<Vec2, int> ReadData(IReadOnlyList<string> input)
