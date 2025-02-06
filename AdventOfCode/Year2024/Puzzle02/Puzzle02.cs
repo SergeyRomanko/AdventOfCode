@@ -13,8 +13,8 @@ public class Puzzle02 : Puzzle
             
         return new[]
         {
-            list.Select(IsSafe1).Count(x => x).ToString(),
-            list.Select(IsSafe2).Count(x => x).ToString(),
+            list.Count(IsSafe1).ToString(),
+            list.Count(IsSafe2).ToString(),
         };
     }
     
@@ -54,3 +54,5 @@ public class Puzzle02 : Puzzle
         }
     }
 }
+
+//https://github.com/encse/adventofcode/tree/master/2024
