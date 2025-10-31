@@ -32,26 +32,14 @@ public class Puzzle02 : Puzzle
 
     private bool IsSafe1(List<int> input)
     {
-        var test = Part1Process(input).ToList();
-
-        return test.All(x => x == 1) || test.All(x => x == -1);
-    }
-    
-    private IEnumerable<int> Part1Process(List<int> input)
-    {
-        for (var i = 0; i < input.Count - 1; i++)
-        {
-            var delta = input[i + 1] - input[i];
-
-            if (delta == 0 || Math.Abs(delta) > 3)
-            {
-                yield return 0;
-            }
-            else
-            {
-                yield return delta > 0 ? 1 : -1;
-            }
-        }
+        var pairs = input.Zip(input.Skip(1)).ToList();
+        
+        if(!pairs.Select(x => Math.Abs(x.First - x.Second)).All(x => x is >= 1 and <= 3))
+            return false;
+        
+        var signSum = pairs.Select(x => Math.Sign(x.First - x.Second)).Sum();
+        
+        return Math.Abs(signSum) == input.Count - 1;
     }
 }
 
