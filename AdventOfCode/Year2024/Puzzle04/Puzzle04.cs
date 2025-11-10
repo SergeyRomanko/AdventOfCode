@@ -101,36 +101,37 @@ public class Puzzle04 : Puzzle
         //Создаем начальные таски 
         foreach (var (pos, value) in data)
         {
-            if (value == 'X')
+            if (value == 'A')
                 tasks.Enqueue(pos);
         }
-
-        var phrase = "XMAS";
-
+        
         while (tasks.TryDequeue(out var it))
         {
-            var value = data[it];
-            var index = phrase.IndexOf(value);
-
-            //Нашли полную фразу
-            if (index == phrase.Length - 1)
-            {
+            if (Part2Test(data, it))
                 yield return 1;
-                continue;
-            }
-
-            value = phrase[index + 1];
-            
-            foreach (var vec2 in _dirs)
-            {
-                var newPosition = vec2 + it;
-
-                if (!data.TryGetValue(newPosition, out var newValue))
-                    continue;
-                
-                if (value == newValue)
-                    tasks.Enqueue(newPosition);
-            }
         }
+    }
+    
+    private bool Part2Test(Dictionary<Vec2, char> data, Vec2 posA)
+    {
+        if (!data.TryGetValue(posA + new Vec2(-1, -1), out var a1))
+            return false;
+        if (!data.TryGetValue(posA + new Vec2(+1, +1), out var a2))
+            return false;
+
+        var isOk1 = (a1 == 'M' && a2 == 'S') || (a1 == 'S' && a2 == 'M');
+        if (!isOk1)
+            return false;
+        
+        if (!data.TryGetValue(posA + new Vec2(-1, +1), out var b1))
+            return false;
+        if (!data.TryGetValue(posA + new Vec2(+1, -1), out var b2))
+            return false;
+
+        var isOk2 = (b1 == 'M' && b2 == 'S') || (b1 == 'S' && b2 == 'M');
+        if (!isOk2)
+            return false;
+        
+        return true;
     }
 }
