@@ -1,9 +1,20 @@
-﻿using System;
-
-namespace AdventOfCode.Common
+﻿namespace AdventOfCode.Common
 {
     public readonly struct Vec2 : IEquatable<Vec2>
     {
+        public static IEnumerable<Vec2> Adjacent => new[]
+        {
+            new Vec2(+1, +1),
+            new Vec2(-1, -1),
+            new Vec2(-1, +1),
+            new Vec2(+1, -1),
+            
+            new Vec2(0,  -1),
+            new Vec2(0,  +1),
+            new Vec2(-1,  0),
+            new Vec2(+1,  0),
+        };
+        
         public static readonly Vec2 Zero  = new Vec2(0, 0);
         public static readonly Vec2 Up    = new Vec2(0, -1);
         public static readonly Vec2 Down  = new Vec2(0, +1);
