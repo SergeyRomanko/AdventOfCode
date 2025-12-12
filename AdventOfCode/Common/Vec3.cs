@@ -27,5 +27,31 @@
         {
             return HashCode.Combine(x, y, z);
         }
+        
+        public static double Distance(Vec3 a, Vec3 b)
+        {
+            checked
+            {
+                return Math.Sqrt(
+                    (a.x - b.x) * (a.x - b.x) +
+                    (a.y - b.y) * (a.y - b.y) +
+                    (a.z - b.z) * (a.z - b.z)
+                );
+            }
+        }
+        
+        public static decimal DistanceSq(Vec3 a, Vec3 b)
+        {
+            checked
+            {
+                decimal dx = a.x - b.x;
+                decimal dy = a.y - b.y;
+                decimal dz = a.z - b.z;
+                
+                return dx * dx +
+                       dy * dy +
+                       dz * dz;
+            }
+        }
     }
 }
