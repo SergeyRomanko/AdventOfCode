@@ -63,5 +63,16 @@
         {
             return $"[{x}:{y}]";
         }
+        
+        public static decimal DistanceSq(Vec2 a, Vec2 b)
+        {
+            checked
+            {
+                decimal dx = a.x - b.x;
+                decimal dy = a.y - b.y;
+                
+                return dx * dx + dy * dy;
+            }
+        }
     }
 }
