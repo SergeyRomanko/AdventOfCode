@@ -16,6 +16,7 @@ public class Puzzle07 : Puzzle
         return new[]
         {
             Part1(input1, (sizeX, sizeY)).Sum().ToString(),
+            Part2(input1, (sizeX, sizeY)).Sum().ToString(),
         };
     }
 
@@ -49,6 +50,69 @@ public class Puzzle07 : Puzzle
                     
                     yield return 1;
                 }
+            }
+        }
+    }
+    
+    private IEnumerable<long> Part2(Dictionary<Vec2, char> input, (int x, int y) size)
+    {
+        var clone = new Dictionary<Vec2, char>(input);
+        var data  = new Dictionary<Vec2, long>();
+
+        for (var y = 0; y < size.y; y++)
+        {
+            for (var x = 0; x < size.x; x++)
+            {
+                var prevPos = new Vec2(x, y - 1);
+                
+                if (!clone.TryGetValue(prevPos, out var prevValue))
+                    continue;
+                
+                if (prevValue is '.' or '^')
+                    continue;
+
+                if (prevValue is 'S')
+                    data[prevPos] = 1;
+
+                var prevData = data.GetValueOrDefault(prevPos, 0);
+
+                var current = clone[new Vec2(x, y)];
+
+                if (current is '.' or '|')
+                {
+                    var myPos = new Vec2(x, y);
+                    clone[myPos] = '|';
+                    data[myPos]  = prevData + data.GetValueOrDefault(myPos, 0);
+                }
+                else if (current == '^')
+                {
+                    if (clone.ContainsKey(new Vec2(x - 1, y)))
+                    {
+                        var myPos = new Vec2(x - 1, y);
+                        
+                        clone[myPos] = '|';
+                        data[myPos]  = prevData + data.GetValueOrDefault(myPos, 0);
+                    }
+
+                    if (clone.ContainsKey(new Vec2(x + 1, y)))
+                    {
+                        var myPos = new Vec2(x + 1, y);
+                        
+                        clone[myPos] = '|';
+                        data[myPos]  = prevData + data.GetValueOrDefault(myPos, 0);
+                    }
+                }
+            }
+        }
+        
+        for (var y = size.y - 1; y < size.y; y++)
+        {
+            for (var x = 0; x < size.x; x++)
+            {
+                var myPos = new Vec2(x, y);
+                
+                if (data.TryGetValue(myPos, out var value))
+                    yield return value;
             }
         }
     }

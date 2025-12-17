@@ -30,35 +30,8 @@ public class Puzzle08 : Puzzle
             x => new HashSet<Vec3> { x }
         );
         
-        /*
-        var ordered =
-            from a in points
-            from b in points
-            where (a.x, a.y, a.z).CompareTo((b.x, b.y, b.z)) < 0
-            orderby Vec3.Distance(a, b)
-            select (a, b);
-
-        foreach (var (a, b) in ordered.Take(1000))
-        {
-            if (workingSet[a] == workingSet[b])
-                continue;
-
-            workingSet[a].UnionWith(workingSet[b]);
-
-            foreach (var bb in workingSet[b])
-            {
-                workingSet[bb] = workingSet[a];
-            }
-        }
-        */
-        
         foreach (var (a, b) in GetOrderedPairs(points).Take(1000))
         {
-            /*if (setOf[a] != setOf[b])
-            {
-                Connect(a, b, setOf);
-            }*/
-            
             if (setOf[a] == setOf[b])
                 continue;
 
@@ -75,17 +48,7 @@ public class Puzzle08 : Puzzle
                     .Take(3)
                     .Aggregate(1, (a, b) => a * b.Count);
     }
-
-    void Connect(Vec3 a, Vec3 b, Dictionary<Vec3, HashSet<Vec3>> setOf)
-    {
-        setOf[a].UnionWith(setOf[b]);
-        
-        foreach (var p in setOf[b])
-        {
-            setOf[p] = setOf[a];
-        }
-    }
-
+    
     IEnumerable<(Vec3 a, Vec3 b)> GetOrderedPairs(List<Vec3> points) =>
         from a in points
         from b in points
