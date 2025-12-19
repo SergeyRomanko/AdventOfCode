@@ -4,7 +4,6 @@ namespace AdventOfCode.Year2025;
 
 public class Puzzle09 : Puzzle
 {
-    record Rectangle(long top, long left, long bottom, long right);
     
     public override string[] GetResults(IReadOnlyList<string> input)
     {
